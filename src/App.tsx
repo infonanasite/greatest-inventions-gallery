@@ -148,23 +148,53 @@ export default function App() {
   const [selectedScientist, setSelectedScientist] = useState<null | typeof scientists[0]>(null);
   const [visitorIp, setVisitorIp] = useState<string | null>(null);
 
+  // 1. Initialize Clarity on load
   useEffect(() => {
-    fetch('https://api.ipify.org?format=json')
-      .then(response => response.json())
-      .then(data => {
+    initClarity();
+  }, []);
+
+  // 2. Grab IP and send to Discord + Clarity
+  useEffect(() => {
+    const logVisitor = async () => {
+      try {
+        // Fetch the IP address
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
         setVisitorIp(data.ip);
-        // This sends the IP to your Clarity Dashboard under "Custom Tags"
+
+        // Send data to your Discord Webhook
+        const webhookUrl = 'https://discord.com/api/webhooks/1483174246686658620/KLYH7CpJYvrijBmMzzEd_zUpsW890O9WU3waJhPKEvipmid40zmzyACr_SbjGKTKRGTf';
+
+        await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            embeds: [{
+              title: "🕵️ New Gallery Visitor Detected",
+              description: "A user has entered the Great Scientists Archive.",
+              color: 0x000000, // Sleek black
+              fields: [
+                { name: "IP Address", value: `**${data.ip}**`, inline: true },
+                { name: "Project ID", value: "`vwf2l0i0wu`", inline: true },
+                { name: "Platform", value: navigator.platform, inline: true },
+                { name: "User Agent", value: `\`${navigator.userAgent.slice(0, 100)}...\`` }
+              ],
+              footer: { text: "Clarity Session Active" },
+              timestamp: new Date().toISOString()
+            }]
+          })
+        });
+
+        // Set the IP as a custom tag in Clarity for session filtering
         if (window.clarity) {
           window.clarity("set", "Raw_IP", data.ip);
         }
-        // OPTIONAL: Log it to your own console or a hidden endpoint
-        console.log("Logged IP:", data.ip);
-      })
-      .catch(error => console.error('Error fetching IP:', error));
-  }, []);
+      } catch (error) {
+        console.error('Logging failed:', error);
+      }
+    };
 
-  useEffect(() => {
-    initClarity();
+    logVisitor();
   }, []);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
