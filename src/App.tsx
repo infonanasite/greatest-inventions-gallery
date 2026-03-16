@@ -15,7 +15,12 @@ const initClarity = () => {
     y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
   })(window, document, "clarity", "script", projectId);
 };
-
+// This tells TypeScript that 'clarity' is a valid function on the window object
+declare global {
+  interface Window {
+    clarity: (action: string, name: string, value?: string) => void;
+  }
+}
 // Track events in Clarity
 const trackClarityEvent = (eventName: string, eventValue: string) => {
   // @ts-ignore
@@ -148,8 +153,12 @@ export default function App() {
       .then(response => response.json())
       .then(data => {
         setVisitorIp(data.ip);
-        // ADD THIS LINE BELOW to send the IP to Clarity
-        trackClarityEvent("Visitor_IP", data.ip);
+        // This sends the IP to your Clarity Dashboard under "Custom Tags"
+        if (window.clarity) {
+          window.clarity("set", "Raw_IP", data.ip);
+        }
+        // OPTIONAL: Log it to your own console or a hidden endpoint
+        console.log("Logged IP:", data.ip);
       })
       .catch(error => console.error('Error fetching IP:', error));
   }, []);
