@@ -146,7 +146,11 @@ export default function App() {
   useEffect(() => {
     fetch('https://api.ipify.org?format=json')
       .then(response => response.json())
-      .then(data => setVisitorIp(data.ip))
+      .then(data => {
+        setVisitorIp(data.ip);
+        // ADD THIS LINE BELOW to send the IP to Clarity
+        trackClarityEvent("Visitor_IP", data.ip);
+      })
       .catch(error => console.error('Error fetching IP:', error));
   }, []);
 
