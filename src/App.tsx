@@ -141,6 +141,14 @@ const scientists = [
 export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedScientist, setSelectedScientist] = useState<null | typeof scientists[0]>(null);
+  const [visitorIp, setVisitorIp] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('https://api.ipify.org?format=json')
+      .then(response => response.json())
+      .then(data => setVisitorIp(data.ip))
+      .catch(error => console.error('Error fetching IP:', error));
+  }, []);
 
   useEffect(() => {
     initClarity();
@@ -332,6 +340,12 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <footer className="fixed bottom-0 w-full bg-[#050505]/90 backdrop-blur-md border-t border-white/10 py-2 px-4 flex justify-end z-40 pointer-events-none">
+        <div className="text-[10px] font-mono tracking-widest text-white/40 uppercase">
+          Visitor Metadata: {visitorIp ? `IP-${visitorIp}` : 'Acquiring...'}
+        </div>
+      </footer>
     </div>
   );
 }
